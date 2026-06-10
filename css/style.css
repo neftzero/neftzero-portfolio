@@ -57,20 +57,31 @@ a { color: inherit; text-decoration: none; }
 img { display: block; width: 100%; height: 100%; object-fit: cover; }
 
 
-/* ── HEADER ── */
+/* ── HEADER ──
+   Fixed + translucent + blurred, floats over content like lam-bao.
+   Page content scrolls underneath it. */
 .site-header {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 100;
   height: var(--header-h);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 2.5rem;
-  background: rgba(13,13,13,0.94);
-  backdrop-filter: blur(14px);
-  border-bottom: 1px solid var(--border);
+  background: rgba(13,13,13,0.35);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
   gap: 1rem;
+  transition: background 0.3s var(--ease), border-color 0.3s var(--ease);
+}
+
+.site-header.scrolled {
+  background: rgba(13,13,13,0.6);
+  border-bottom-color: rgba(255,255,255,0.1);
 }
 
 .logo {
@@ -363,7 +374,7 @@ img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .about-page {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 4rem 2rem 6rem;
+  padding: calc(var(--header-h) + 3rem) 2rem 6rem;
 }
 
 .about-grid {
@@ -506,5 +517,5 @@ img { display: block; width: 100%; height: 100%; object-fit: cover; }
 @media (max-width: 540px) {
   .site-header { padding: 0 1.2rem; }
   .gallery-grid { column-count: 1; }
-  .about-page { padding: 2rem 1rem 4rem; }
+  .about-page { padding: calc(var(--header-h) + 2rem) 1rem 4rem; }
 }

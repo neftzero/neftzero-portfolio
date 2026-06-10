@@ -28,7 +28,7 @@ const WORKS = [
     cat:   "2d",
     title: "Halcyon Blades",
     desc:  "A series of high-fantasy weapon designs, each with its own mythology and visual language.",
-    img:   "images/2d/halcyon-blades.jpg",   // replace with your file
+    img:   "images/2d/2d-01.jpg",
     size:  "wide",
     year:  "2024"
   },
@@ -37,7 +37,7 @@ const WORKS = [
     cat:   "2d",
     title: "Creature Study 741",
     desc:  "Specimens from an unnamed reality. Ink and digital.",
-    img:   "images/2d/creatures-741.jpg",
+    img:   "images/2d/2d-02.jpg",
     size:  "tall",
     year:  "2024"
   },
@@ -46,7 +46,7 @@ const WORKS = [
     cat:   "2d",
     title: "Character Development",
     desc:  "Loose sketches exploring adventurer archetypes for an unrealised fantasy project.",
-    img:   "images/2d/character-dev.jpg",
+    img:   "images/2d/2d-03.jpg",
     size:  "normal",
     year:  "2023"
   },
@@ -55,7 +55,7 @@ const WORKS = [
     cat:   "2d",
     title: "Robot Warm-ups",
     desc:  "Morning sketch routine. Ten minutes each, no corrections.",
-    img:   "images/2d/robot-sketches.jpg",
+    img:   "images/2d/2d-04.jpg",
     size:  "square",
     year:  "2023"
   },
@@ -64,7 +64,7 @@ const WORKS = [
     cat:   "2d",
     title: "Lullaby",
     desc:  "A personal piece about quiet and memory.",
-    img:   "images/2d/lullaby.jpg",
+    img:   "images/2d/2d-05.jpg",
     size:  "normal",
     year:  "2023"
   },
@@ -73,7 +73,7 @@ const WORKS = [
     cat:   "2d",
     title: "Dino Studies",
     desc:  "Distinctly-coloured dinosaurs and their strange relationship with birds.",
-    img:   "images/2d/dino-studies.jpg",
+    img:   "images/2d/2d-06.jpg",
     size:  "normal",
     year:  "2022"
   },
@@ -84,7 +84,7 @@ const WORKS = [
     cat:   "3d",
     title: "Portrait Sketches",
     desc:  "Blender sculpts exploring expressive portraiture. Goal was comfort with digital clay, not polish.",
-    img:   "images/3d/blender-portraits.jpg",
+    img:   "images/3d/3d-01.jpg",
     size:  "wide",
     year:  "2024"
   },
@@ -93,7 +93,7 @@ const WORKS = [
     cat:   "3d",
     title: "Light Shapers",
     desc:  "A study of light, shape, and shadow using procedural geometry.",
-    img:   "images/3d/light-shapers.jpg",
+    img:   "images/3d/3d-02.jpg",
     size:  "tall",
     year:  "2024"
   },
@@ -102,7 +102,7 @@ const WORKS = [
     cat:   "3d",
     title: "Nuclear Landscape",
     desc:  "Environmental render for the Nuclear Maw world — a post-collapse racing territory.",
-    img:   "images/3d/nuclear.jpg",
+    img:   "images/3d/3d-03.jpg",
     size:  "normal",
     year:  "2023"
   },
@@ -111,7 +111,7 @@ const WORKS = [
     cat:   "3d",
     title: "Creature Prop",
     desc:  "3D proxy model built to support sculptors during production.",
-    img:   "images/3d/creature-prop.jpg",
+    img:   "images/3d/3d-04.jpg",
     size:  "square",
     year:  "2023"
   },
@@ -120,7 +120,7 @@ const WORKS = [
     cat:   "3d",
     title: "Barrow Downs",
     desc:  "Environmental study for an untitled Lord of the Rings game project.",
-    img:   "images/3d/barrow-downs.jpg",
+    img:   "images/3d/3d-05.jpg",
     size:  "normal",
     year:  "2022"
   },
@@ -131,7 +131,7 @@ const WORKS = [
     cat:   "design",
     title: "Aegis of Champions",
     desc:  "Design process and final product for a living tournament trophy — forged from bronze, silver, and leather.",
-    img:   "images/design/aegis.jpg",
+    img:   "images/design/de-01.jpg",
     size:  "wide",
     year:  "2024"
   },
@@ -140,7 +140,7 @@ const WORKS = [
     cat:   "design",
     title: "Item Icon System",
     desc:  "In-game item icons built for immediate readability — colour, shape, and type as a visual language.",
-    img:   "images/design/item-icons.jpg",
+    img:   "images/design/de-02.jpg",
     size:  "square",
     year:  "2023"
   },
@@ -149,7 +149,7 @@ const WORKS = [
     cat:   "design",
     title: "Update Pages",
     desc:  "Key art and header illustrations for game update pages, 2009–2015.",
-    img:   "images/design/update-pages.jpg",
+    img:   "images/design/de-03.jpg",
     size:  "tall",
     year:  "2023"
   },
@@ -158,7 +158,7 @@ const WORKS = [
     cat:   "design",
     title: "Graphic T-Shirts",
     desc:  "Graphic illustrations used for exclusive merchandise drops.",
-    img:   "images/design/graphic-tees.jpg",
+    img:   "images/design/de-04.jpg",
     size:  "normal",
     year:  "2022"
   },
@@ -167,7 +167,7 @@ const WORKS = [
     cat:   "design",
     title: "Brand System",
     desc:  "A cohesive visual identity project including typography, colour, and mark.",
-    img:   "images/design/brand-system.jpg",
+    img:   "images/design/de-05.jpg",
     size:  "normal",
     year:  "2022"
   }

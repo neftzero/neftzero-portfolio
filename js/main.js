@@ -63,6 +63,24 @@
 
 
   /* ══════════════════════════════════════
+     HEADER SCROLL STATE
+     Slightly increases header opacity once
+     the page has scrolled, for readability
+     over bright tiles.
+  ══════════════════════════════════════ */
+  (function initHeaderScroll() {
+    const header = document.querySelector('.site-header');
+    if (!header) return;
+
+    function update() {
+      header.classList.toggle('scrolled', window.scrollY > 10);
+    }
+    update();
+    window.addEventListener('scroll', update, { passive: true });
+  })();
+
+
+  /* ══════════════════════════════════════
      GALLERY GRID
   ══════════════════════════════════════ */
   const grid = document.getElementById('galleryGrid');
