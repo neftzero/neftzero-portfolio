@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900">
+  <rect width="1200" height="900" fill="#141414"/>
+  <rect x="0" y="0" width="1200" height="900" fill="url(#g2)"/>
+  <defs>
+    <radialGradient id="g2" cx="70%" cy="60%" r="70%">
+      <stop offset="0%"   stop-color="#8fb8c8" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#0d0d0d" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <text x="600" y="420" font-family="Georgia,serif" font-size="22" fill="#6a6560" text-anchor="middle" letter-spacing="6">3D RENDER</text>
+  <text x="600" y="460" font-family="Georgia,serif" font-size="14" fill="#2a2a2a" text-anchor="middle" letter-spacing="4">replace with your image</text>
+</svg>

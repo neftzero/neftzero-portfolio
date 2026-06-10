@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About — Portfolio</title>
+  <meta name="description" content="Portfolio of art and design work — 2D, 3D, and design." />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+</head>
+<body data-page="about">
+
+  <!-- ─── EDGE FADES ─── -->
+  <div class="edge-fade edge-fade--top" aria-hidden="true"></div>
+  <div class="edge-fade edge-fade--bottom" aria-hidden="true"></div>
+
+  <!-- ─── NAVBAR ─── -->
+  <header class="site-header">
+    <a class="logo" href="index.html">
+      <span class="logo-name">YOUR NAME</span>
+      <span class="logo-sub">ART &amp; DESIGN</span>
+    </a>
+
+    <div class="cat-nav-wrap">
+      <div class="glass-pill" aria-hidden="true"></div>
+      <nav class="cat-nav" aria-label="Gallery categories">
+        <div class="cat-nav-indicator" id="navIndicator"></div>
+        <a href="index.html"           class="cat-link "    data-cat="all">ALL</a>
+        <a href="gallery-2d.html"      class="cat-link "     data-cat="2d">2D</a>
+        <a href="gallery-3d.html"      class="cat-link "     data-cat="3d">3D</a>
+        <a href="gallery-design.html"  class="cat-link " data-cat="design">DESIGN</a>
+      </nav>
+    </div>
+
+    <div class="nav-right">
+      <a class="about-link about-link--active" href="about.html" data-tooltip="ABOUT">ABOUT</a>
+    </div>
+  </header>
+
+  <!-- ─── ABOUT ─── -->
+  <section class="about-page">
+    <div class="about-grid">
+      <div class="about-text">
+        <p class="services-heading">About</p>
+        <h1 class="about-heading">
+          <em>Your Name</em><br>
+          is an artist &amp;<br>designer based in<br>
+          <em>Your City.</em>
+        </h1>
+        <p class="about-body">
+          Replace this with your own bio. Describe your background, 
+          your artistic practice, what drives your work, and the kinds 
+          of projects you take on.
+        </p>
+        <p class="about-body">
+          You've worked with clients including <em>Studio A</em>, 
+          <em>Company B</em>, and <em>Brand C</em>. Available for 
+          freelance commissions and collaborative projects.
+        </p>
+        <div class="about-contact">
+          <a href="mailto:hello@yoursite.com" class="contact-cta">Get in touch ↗</a>
+          <div class="about-links">
+            <a href="https://instagram.com/" target="_blank" rel="noopener">Instagram</a>
+            <a href="https://twitter.com/"   target="_blank" rel="noopener">Twitter / X</a>
+            <a href="https://artstation.com/" target="_blank" rel="noopener">ArtStation</a>
+          </div>
+        </div>
+      </div>
+      <div class="about-img-wrap">
+        <div class="about-img-placeholder">
+          <span>Your<br>Photo<br>Here</span>
+        </div>
+        <div class="about-img-caption">
+          <span>2025</span>
+          <span>Photo by Someone</span>
+        </div>
+      </div>
+    </div>
+    <div class="about-services">
+      <h2 class="services-heading">What I Do</h2>
+      <ul class="services-list">
+        <li>
+          <span class="service-cat">2D</span>
+          <span class="service-desc">Character design, illustration, concept art, ink &amp; digital painting</span>
+        </li>
+        <li>
+          <span class="service-cat">3D</span>
+          <span class="service-desc">Sculpting, rendering, environmental design, hard-surface modeling</span>
+        </li>
+        <li>
+          <span class="service-cat">DESIGN</span>
+          <span class="service-desc">Brand identity, UI/UX, typography, editorial layout</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ─── FOOTER ─── -->
+  <footer class="site-footer">
+    <span>©<span id="yr"></span>&nbsp;Your Name</span>
+    <a href="mailto:hello@yoursite.com">hello@yoursite.com</a>
+    <a href="https://instagram.com/" target="_blank" rel="noopener">Instagram</a>
+  </footer>
+
+  <script src="js/works.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
