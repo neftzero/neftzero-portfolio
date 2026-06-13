@@ -3,11 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>About — Portfolio</title>
+  <title>About — Lam Nguyen</title>
   <meta name="description" content="Portfolio of art and design work — 2D, 3D, and design." />
+  <script>
+    (function () {
+      const savedTheme = localStorage.getItem('theme');
+      const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
   <link rel="stylesheet" href="css/style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
 </head>
 <body data-page="about">
 
@@ -37,8 +45,8 @@
 
   <!-- ─── NAVBAR ─── -->
   <header class="site-header">
-    <a class="logo" href="index.html">
-      <span class="logo-name">YOUR NAME</span>
+    <a class="logo" href="index.html#all">
+      <span class="logo-name">LAM NGUYEN</span>
       <span class="logo-sub">ART &amp; DESIGN</span>
     </a>
 
@@ -46,10 +54,10 @@
 
       <nav class="cat-nav" aria-label="Gallery categories">
         <div class="cat-nav-indicator" id="navIndicator"></div>
-        <a href="index.html"           class="cat-link "    data-cat="all">ALL</a>
-        <a href="gallery-2d.html"      class="cat-link "     data-cat="2d">2D</a>
-        <a href="gallery-3d.html"      class="cat-link "     data-cat="3d">3D</a>
-        <a href="gallery-design.html"  class="cat-link " data-cat="design">DESIGN</a>
+        <a href="index.html#all"           class="cat-link "    data-cat="all">ALL</a>
+        <a href="index.html#2d"      class="cat-link "     data-cat="2d">2D</a>
+        <a href="index.html#3d"      class="cat-link "     data-cat="3d">3D</a>
+        <a href="index.html#design"  class="cat-link " data-cat="design">DESIGN</a>
       </nav>
     </div>
 
@@ -64,9 +72,9 @@
       <div class="about-text">
         <p class="services-heading">About</p>
         <h1 class="about-heading">
-          <em>Your Name</em><br>
+          <em>Lam Nguyen</em><br>
           is an artist &amp;<br>designer based in<br>
-          <em>Your City.</em>
+          <em>Ho Chi Minh City.</em>
         </h1>
         <p class="about-body">
           Replace this with your own bio. Describe your background, 
@@ -79,7 +87,7 @@
           freelance commissions and collaborative projects.
         </p>
         <div class="about-contact">
-          <a href="mailto:hello@yoursite.com" class="contact-cta">Get in touch ↗</a>
+          <a href="mailto:hello@lamnguyen.design" class="contact-cta">Get in touch ↗</a>
           <div class="about-links">
             <a href="https://instagram.com/" target="_blank" rel="noopener">Instagram</a>
             <a href="https://twitter.com/"   target="_blank" rel="noopener">Twitter / X</a>
@@ -118,12 +126,24 @@
 
   <!-- ─── FOOTER ─── -->
   <footer class="site-footer">
-    <span>©<span id="yr"></span>&nbsp;Your Name</span>
-    <a href="mailto:hello@yoursite.com">hello@yoursite.com</a>
-    <a href="https://instagram.com/" target="_blank" rel="noopener">Instagram</a>
+    <div class="footer-left">
+      <span>©<span id="yr"></span>&nbsp;Lam Nguyen</span>
+    </div>
+    <div class="footer-right">
+      <a href="mailto:hello@lamnguyen.design">hello@lamnguyen.design</a>
+      <a href="https://instagram.com/" target="_blank" rel="noopener">Instagram</a>
+      <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle Theme">
+        <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+        </svg>
+        <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+        </svg>
+      </button>
+    </div>
   </footer>
 
-  <script src="https://unpkg.com/lenis@1.1.5/dist/lenis.min.js"></script>
   <script src="js/works.js"></script>
   <script src="js/main.js"></script>
 </body>
