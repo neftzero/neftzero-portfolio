@@ -63,6 +63,16 @@ body {
   overflow-x: hidden;
 }
 
+/* Smoothly transition blur filter for all top-level page components */
+body > *:not(.lightbox):not(.lb-flip-temp) {
+  transition: filter 0.45s var(--ease);
+}
+
+/* Apply deep blur to the whole site behind the zooming image when lightbox is active */
+body.lightbox-active > *:not(.lightbox):not(.lb-flip-temp) {
+  filter: blur(8px) saturate(0.85);
+}
+
 .gallery-grid, .about-page {
   animation: pageFadeIn 0.4s var(--ease) both;
 }
@@ -85,6 +95,44 @@ body.is-leaving .gallery-grid,
 body.is-leaving .about-page {
   opacity: 0;
   transition: opacity 0.28s var(--ease);
+}
+
+/* ── LOADING SCREEN ── */
+.loader-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--paper);
+  z-index: 9999;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 3rem 4rem;
+  pointer-events: all;
+  will-change: transform;
+}
+
+.loader-percentage {
+  font-family: var(--font-mono);
+  font-size: clamp(3.5rem, 9vw, 7.5rem);
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  user-select: none;
+}
+
+body.loading-active {
+  overflow: hidden !important;
+}
+
+body.loading-active .site-footer {
+  pointer-events: none !important;
+}
+
+@media (max-width: 600px) {
+  .loader-overlay {
+    padding: 2rem;
+  }
 }
 
 a {
@@ -188,20 +236,8 @@ html[data-theme="dark"] .site-header {
   border-radius: 99px;
 }
 
-.cat-nav:hover .cat-link.active {
-  color: var(--ink-muted);
-}
-
 .cat-link:hover {
   color: var(--ink);
-}
-
-.cat-nav:hover .cat-link:hover {
-  color: var(--paper) !important;
-}
-
-.cat-nav:hover .cat-link.active:hover {
-  color: var(--paper) !important;
 }
 
 .cat-link.active {
@@ -211,14 +247,14 @@ html[data-theme="dark"] .site-header {
 /* sliding underline indicator */
 .cat-nav-indicator {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 3px;
+  left: 0;
   height: 30px;
   background: var(--ink);
   border-radius: 99px;
-  transition: left 0.3s var(--ease-out), width 0.3s var(--ease-out);
   pointer-events: none;
   z-index: 1;
+  will-change: transform, width;
 }
 
 /* ── NAV RIGHT: about link styled as modern pill ── */
@@ -354,13 +390,27 @@ html[data-theme="dark"] .ef-layer {
   break-inside: avoid;
   background: var(--paper-secondary);
   opacity: 0;
-  transform: translateY(12px);
+  transform: translateY(-30px);
   transition:
     opacity 0.5s var(--ease),
     transform 0.5s var(--ease);
   margin-bottom: 6px;
   border-radius: 6px;
   padding: 2px;
+}
+
+/* Lock tiles while loader is active to prevent premature animations */
+body.loading-active .tile {
+  opacity: 0 !important;
+  transform: translateY(-30px) !important;
+  transition: none !important;
+}
+
+/* Exiting state for category switching (animating downward) */
+.tile.is-exiting {
+  opacity: 0 !important;
+  transform: translateY(30px) !important;
+  transition: opacity 0.25s var(--ease), transform 0.25s var(--ease) !important;
 }
 
 /* Subtle gradient light glow behind the tile on hover */
@@ -393,9 +443,16 @@ html[data-theme="dark"] .tile::before {
   width: 100%;
   height: auto;
   display: block;
-  transition: transform 0.65s var(--ease), filter 0.4s;
+  transition: transform 0.65s var(--ease), filter 0.4s var(--ease), opacity 0.4s var(--ease);
   filter: saturate(0.9);
   border-radius: 4px;
+}
+
+/* Glassmorphic/blurred footprint when the image tile is lifted into the lightbox */
+.tile-img.is-lifted {
+  filter: blur(12px) saturate(0.6) !important;
+  opacity: 0.35 !important;
+  transform: scale(0.96);
 }
 
 .tile:hover .tile-img {
@@ -480,18 +537,62 @@ html[data-theme="dark"] .tile::before {
   position: fixed;
   inset: 0;
   z-index: 300;
-  background: rgba(0, 0, 0, 0.96);
+  background: rgba(0, 0, 0, 0);
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.3s var(--ease);
+  transition: opacity 0.45s var(--ease), background-color 0.45s var(--ease);
 }
 
 .lightbox.open {
   opacity: 1;
   pointer-events: all;
+  background: rgba(0, 0, 0, 0.96);
+  transition: opacity 0.45s var(--ease), background-color 0.45s var(--ease);
+}
+
+/* ── LIGHTBOX ZOOM TRANSITIONS ── */
+.lb-flip-temp {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, top, left, width, height, border-radius;
+}
+
+/* Zooming open state: background must remain transparent, details hidden */
+.lightbox.is-zooming-open {
+  background: rgba(0, 0, 0, 0) !important;
+  opacity: 1 !important;
+}
+
+.lightbox.is-zooming-open .lb-container,
+.lightbox.is-zooming-open .lb-close,
+.lightbox.is-zooming-open .lb-prev,
+.lightbox.is-zooming-open .lb-next {
+  opacity: 0 !important;
+  transition: none !important;
+}
+
+.lightbox.is-zooming-open #lbImg {
+  opacity: 0 !important;
+  transition: none !important;
+}
+
+/* Zooming close state: details hidden immediately, background fades naturally */
+.lightbox.is-zooming-close .lb-container,
+.lightbox.is-zooming-close .lb-close,
+.lightbox.is-zooming-close .lb-prev,
+.lightbox.is-zooming-close .lb-next {
+  opacity: 0 !important;
+  transition: none !important;
+}
+
+.lightbox.is-zooming-close #lbImg {
+  opacity: 0 !important;
+  transition: none !important;
 }
 
 .lb-container {
@@ -501,6 +602,14 @@ html[data-theme="dark"] .tile::before {
   height: min(92vh, 960px);
   align-items: center;
   position: relative;
+  opacity: 0;
+  transform: translateY(15px);
+  transition: opacity 0.5s var(--ease), transform 0.5s var(--ease-out);
+}
+
+.lightbox.open:not(.is-zooming-open) .lb-container {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .lb-sidebar-left {
@@ -558,7 +667,7 @@ html[data-theme="dark"] .tile::before {
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
 }
 
-.lightbox.open .lb-inner {
+.lightbox.open:not(.is-zooming-open) .lb-inner {
   transform: scale(1);
 }
 
@@ -683,10 +792,17 @@ html[data-theme="dark"] .tile::before {
   align-items: center;
   justify-content: center;
   z-index: 320;
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+.lightbox.open:not(.is-zooming-open) .lb-close {
+  opacity: 1;
+  transform: scale(1);
 }
 
 .lb-close:hover {
-  transform: scale(1.08);
+  transform: scale(1.08) !important;
 }
 
 .lb-prev,

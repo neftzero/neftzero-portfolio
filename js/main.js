@@ -17,6 +17,77 @@
   const yr = document.getElementById('yr');
   if (yr) yr.textContent = new Date().getFullYear();
 
+  /* ══════════════════════════════
+     LOADING SCREEN & PROGRESS
+     ══════════════════════════════ */
+  const loader = document.getElementById('loader');
+  const hasLoadedBefore = sessionStorage.getItem('portfolio-loaded');
+
+  function initLoader() {
+    if (!loader) return;
+
+    if (hasLoadedBefore) {
+      loader.style.display = 'none';
+      return;
+    }
+
+    document.body.classList.add('loading-active');
+
+    const progress = { value: 0 };
+    const percentageEl = document.getElementById('loaderPercentage');
+
+    const updatePercentage = () => {
+      const val = Math.floor(progress.value);
+      if (percentageEl) {
+        percentageEl.textContent = val.toString().padStart(2, '0') + '%';
+      }
+    };
+
+    const finishLoading = () => {
+      gsap.to(progress, {
+        value: 100,
+        duration: 0.6,
+        ease: 'power2.out',
+        onUpdate: updatePercentage,
+        onComplete: () => {
+          // Slide loader downward
+          gsap.to(loader, {
+            yPercent: 100,
+            duration: 1.1,
+            ease: 'power3.inOut',
+            onComplete: () => {
+              loader.style.display = 'none';
+              sessionStorage.setItem('portfolio-loaded', 'true');
+            }
+          });
+
+          // Trigger tile animations exactly 200ms into the transition
+          setTimeout(() => {
+            document.body.classList.remove('loading-active');
+          }, 200);
+        }
+      });
+    };
+
+    if (document.readyState === 'complete') {
+      finishLoading();
+    } else {
+      const tween = gsap.to(progress, {
+        value: 85,
+        duration: 1.8,
+        ease: 'power1.out',
+        onUpdate: updatePercentage
+      });
+
+      window.addEventListener('load', () => {
+        tween.kill();
+        finishLoading();
+      });
+    }
+  }
+
+  initLoader();
+
 
   /* ══════════════════════════════
      PAGE FADE TRANSITIONS
@@ -51,24 +122,62 @@
   const nav       = document.querySelector('.cat-nav');
   const indicator = document.getElementById('navIndicator');
 
-  function setIndicator(el) {
-    if (!nav || !indicator || !el) return;
-    const navRect = nav.getBoundingClientRect();
-    const elRect  = el.getBoundingClientRect();
-    indicator.style.left  = (elRect.left - navRect.left) + 'px';
-    indicator.style.width = elRect.width + 'px';
+  function movePill(target, animate = true) {
+    if (!indicator || !target) return;
+    const x = target.offsetLeft;
+    const width = target.offsetWidth;
+
+    if (!animate) {
+      gsap.set(indicator, { x, width });
+      return;
+    }
+
+    gsap.timeline()
+      .to(indicator, {
+        scaleY: 0.55,
+        scaleX: 1.08,
+        rotation: -2,
+        duration: 0.18,
+        ease: 'power2.in',
+        transformOrigin: '50% 50%'
+      })
+      .to(indicator, {
+        x,
+        width,
+        duration: 0.6,
+        ease: 'elastic.out(1, 0.65)'
+      }, '-=0.04')
+      .to(indicator, {
+        scaleY: 1,
+        scaleX: 1,
+        rotation: 0,
+        duration: 0.7,
+        ease: 'elastic.out(1, 0.45)'
+      }, '-=0.55');
   }
 
   function initNavIndicator() {
     if (!nav || !indicator) return;
 
-    nav.querySelectorAll('.cat-link').forEach(link => {
-      link.addEventListener('mouseenter', () => setIndicator(link));
-      link.addEventListener('mouseleave', () => { if (currentActiveLink) setIndicator(currentActiveLink); });
+    // Apply magnetic hover pull to all links in the header:
+    // Categories and About link
+    const magneticItems = document.querySelectorAll('.cat-link, .about-link');
+    magneticItems.forEach(item => {
+      // gentle magnetic pull toward the cursor
+      item.addEventListener('mousemove', (e) => {
+        const rect = item.getBoundingClientRect();
+        const relX = e.clientX - rect.left - rect.width / 2;
+        const relY = e.clientY - rect.top - rect.height / 2;
+        gsap.to(item, { x: relX * 0.25, y: relY * 0.35, duration: 0.35, ease: 'power2.out' });
+      });
+
+      item.addEventListener('mouseleave', () => {
+        gsap.to(item, { x: 0, y: 0, duration: 0.6, ease: 'elastic.out(1, 0.4)' });
+      });
     });
 
     window.addEventListener('resize', () => {
-      if (currentActiveLink) setIndicator(currentActiveLink);
+      if (currentActiveLink) movePill(currentActiveLink, false);
     }, { passive: true });
   }
 
@@ -171,7 +280,7 @@
       if (activeLink) {
         activeLink.classList.add('active');
         currentActiveLink = activeLink;
-        requestAnimationFrame(() => setIndicator(activeLink));
+        requestAnimationFrame(() => movePill(activeLink, animate));
       }
     }
 
@@ -181,13 +290,19 @@
       const tiles = grid.querySelectorAll('.tile');
       if (tiles.length > 0) {
         tiles.forEach((t, i) => {
-          t.style.transitionDelay = `${(i % 4) * 20}ms`;
-          t.style.transitionDuration = '0.2s';
-          t.classList.remove('visible');
+          let cols = 4;
+          const w = window.innerWidth;
+          if (w <= 600) cols = 1;
+          else if (w <= 1024) cols = 2;
+
+          const col = parseInt(t.dataset.index || i, 10) % cols;
+          t.style.transitionDelay = `${col * 40}ms`;
+          t.style.transitionDuration = '0.25s';
+          t.classList.add('is-exiting');
         });
         setTimeout(() => {
           buildTiles(worksList);
-        }, 250);
+        }, 350);
       } else {
         buildTiles(worksList);
       }
@@ -257,67 +372,206 @@
       applyTransform();
     }
 
+    let activeHiddenImg = null;
+
+    function hideTileImg(img) {
+      if (activeHiddenImg && activeHiddenImg !== img) {
+        activeHiddenImg.classList.remove('is-lifted');
+      }
+      activeHiddenImg = img;
+      if (activeHiddenImg) {
+        activeHiddenImg.classList.add('is-lifted');
+      }
+    }
+
+    function restoreTileImg() {
+      if (activeHiddenImg) {
+        activeHiddenImg.classList.remove('is-lifted');
+        activeHiddenImg = null;
+      }
+    }
+
     openLightbox = function(idx) {
       currentIdx = idx;
+      document.body.classList.add('lightbox-active');
       
-      // Get the clicked tile image for FLIP animation
       const tiles = grid ? grid.querySelectorAll('.tile') : [];
-      let clickedImg = null;
-      if (tiles[idx]) {
-        clickedImg = tiles[idx].querySelector('.tile-img');
-      }
+      const clickedImg = tiles[idx] ? tiles[idx].querySelector('.tile-img') : null;
       
-      renderSlide(idx);
-      lb.classList.add('open');
-      lb.setAttribute('aria-hidden', 'false');
-      document.body.style.overflow = 'hidden';
-      lbClose.focus();
-      
-      // FLIP entry transition
-      if (clickedImg && lbImg) {
+      if (clickedImg) {
         const firstRect = clickedImg.getBoundingClientRect();
-        const lastRect = lbImg.getBoundingClientRect();
+        const aspect = clickedImg.naturalWidth / clickedImg.naturalHeight || (clickedImg.width / clickedImg.height);
+        const naturalW = clickedImg.naturalWidth || clickedImg.width;
+        const naturalH = clickedImg.naturalHeight || clickedImg.height;
         
-        if (lastRect.width > 0 && lastRect.height > 0) {
-          const deltaX = firstRect.left - lastRect.left;
-          const deltaY = firstRect.top - lastRect.top;
-          const deltaW = firstRect.width / lastRect.width;
-          const deltaH = firstRect.height / lastRect.height;
-          
-          lbImg.style.transition = 'none';
-          lbImg.style.transformOrigin = 'top left';
-          lbImg.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(${deltaW}, ${deltaH})`;
-          
-          // Force reflow
-          void lbImg.offsetWidth;
-          
-          lbImg.style.transition = 'transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.45s var(--ease)';
-          lbImg.style.transform = 'translate(0px, 0px) scale(1)';
-          
-          setTimeout(() => {
-            if (lb.classList.contains('open') && scale === 1) {
-              lbImg.style.transformOrigin = '';
-              lbImg.style.transition = 'opacity 0.22s, transform 0.2s';
-              applyTransform();
-            }
-          }, 450);
+        // Render slide structure (resets zoom, sets lbImg.src, triggers load)
+        renderSlide(idx);
+        
+        // Hide the real image initially so it doesn't show during zoom
+        lbImg.style.opacity = '0';
+        lbImg.style.transition = 'none';
+        
+        const wrap = document.querySelector('.lb-img-wrap');
+        const wrapRect = wrap.getBoundingClientRect();
+        
+        const wrapAspect = wrapRect.width / wrapRect.height;
+        let targetW, targetH, targetT, targetL;
+        
+        if (aspect > wrapAspect) {
+          targetW = wrapRect.width;
+          targetH = wrapRect.width / aspect;
         } else {
-          // Fallback zoom-in
-          lbImg.style.transition = 'none';
-          lbImg.style.transform = 'scale(0.9)';
-          lbImg.style.opacity = '0';
-          void lbImg.offsetWidth;
-          lbImg.style.transition = 'transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.45s var(--ease)';
-          lbImg.style.transform = 'scale(1)';
-          lbImg.style.opacity = '1';
+          targetH = wrapRect.height;
+          targetW = wrapRect.height * aspect;
         }
+        
+        // If the natural dimensions are smaller than the container's contained box,
+        // the browser will render it at its natural size to prevent upscaling.
+        if (targetW > naturalW && targetH > naturalH) {
+          targetW = naturalW;
+          targetH = naturalH;
+        }
+        
+        targetT = wrapRect.top + (wrapRect.height - targetH) / 2;
+        targetL = wrapRect.left + (wrapRect.width - targetW) / 2;
+        
+        const flipImg = document.createElement('img');
+        flipImg.src = clickedImg.src;
+        flipImg.className = 'lb-flip-temp';
+        flipImg.style.position = 'fixed';
+        flipImg.style.top = firstRect.top + 'px';
+        flipImg.style.left = firstRect.left + 'px';
+        flipImg.style.width = firstRect.width + 'px';
+        flipImg.style.height = firstRect.height + 'px';
+        flipImg.style.borderRadius = '4px';
+        flipImg.style.objectFit = 'cover';
+        document.body.appendChild(flipImg);
+        
+        hideTileImg(clickedImg);
+        
+        lb.classList.add('open', 'is-zooming-open');
+        lb.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        
+        // Force reflow
+        void flipImg.offsetWidth;
+        
+        flipImg.style.top = targetT + 'px';
+        flipImg.style.left = targetL + 'px';
+        flipImg.style.width = targetW + 'px';
+        flipImg.style.height = targetH + 'px';
+        flipImg.style.borderRadius = '2px';
+        
+        let zoomFinished = false;
+        let imageLoaded = false;
+        
+        function showRealImage() {
+          gsap.to(lbImg, {
+            opacity: 1,
+            duration: 0.3,
+            ease: 'power2.out',
+            onComplete: () => {
+              if (flipImg) flipImg.remove();
+              // Reset inline style so CSS classes (.loading) can control opacity during sliding transitions
+              lbImg.style.opacity = '';
+            }
+          });
+        }
+        
+        lbImg.onload = () => {
+          imageLoaded = true;
+          lbImg.classList.remove('loading');
+          
+          // Re-trigger standard slide render side-effects (direction resets etc)
+          void lbImg.offsetWidth;
+          lbImg.classList.remove('slide-in-left', 'slide-in-right');
+          isTransitioning = false;
+          
+          if (zoomFinished) {
+            showRealImage();
+          }
+        };
+        
+        lbImg.onerror = () => {
+          imageLoaded = true;
+          lbImg.classList.remove('loading');
+          lbImg.style.opacity = '1';
+          if (flipImg) flipImg.remove();
+          isTransitioning = false;
+        };
+        
+        setTimeout(() => {
+          zoomFinished = true;
+          lb.classList.remove('is-zooming-open');
+          
+          if (imageLoaded || lbImg.complete) {
+            showRealImage();
+          }
+          lbClose.focus();
+        }, 450);
+        
+      } else {
+        renderSlide(idx);
+        lbImg.style.opacity = '1';
+        lb.classList.add('open');
+        lb.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        lbClose.focus();
       }
     };
 
     function closeLightbox() {
-      lb.classList.remove('open');
-      lb.setAttribute('aria-hidden', 'true');
-      document.body.style.overflow = '';
+      document.body.classList.remove('lightbox-active');
+      const tiles = grid ? grid.querySelectorAll('.tile') : [];
+      const tileImg = tiles[currentIdx] ? tiles[currentIdx].querySelector('.tile-img') : null;
+      
+      if (tileImg && lbImg && lbImg.getAttribute('src')) {
+        if (scale > 1) {
+          resetZoom();
+          void lbImg.offsetWidth;
+        }
+        const targetRect = tileImg.getBoundingClientRect();
+        const firstRect = lbImg.getBoundingClientRect();
+        
+        const flipImg = document.createElement('img');
+        flipImg.src = lbImg.src;
+        flipImg.className = 'lb-flip-temp';
+        flipImg.style.position = 'fixed';
+        flipImg.style.top = firstRect.top + 'px';
+        flipImg.style.left = firstRect.left + 'px';
+        flipImg.style.width = firstRect.width + 'px';
+        flipImg.style.height = firstRect.height + 'px';
+        flipImg.style.borderRadius = '2px';
+        flipImg.style.objectFit = 'cover';
+        document.body.appendChild(flipImg);
+        
+        lb.classList.add('is-zooming-close');
+        lb.classList.remove('open');
+        lb.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+        
+        // Force reflow
+        void flipImg.offsetWidth;
+        
+        flipImg.style.top = targetRect.top + 'px';
+        flipImg.style.left = targetRect.left + 'px';
+        flipImg.style.width = targetRect.width + 'px';
+        flipImg.style.height = targetRect.height + 'px';
+        flipImg.style.borderRadius = '4px';
+        flipImg.style.objectFit = 'cover';
+        
+        setTimeout(() => {
+          lb.classList.remove('is-zooming-close');
+          restoreTileImg();
+          flipImg.remove();
+        }, 450);
+        
+      } else {
+        lb.classList.remove('open');
+        lb.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+        restoreTileImg();
+      }
     }
 
     let isTransitioning = false;
@@ -327,6 +581,15 @@
       if (!w) {
         isTransitioning = false;
         return;
+      }
+
+      // Hide corresponding gallery tile image
+      const tiles = grid ? grid.querySelectorAll('.tile') : [];
+      if (tiles[idx]) {
+        const tileImg = tiles[idx].querySelector('.tile-img');
+        hideTileImg(tileImg);
+      } else {
+        restoreTileImg();
       }
 
       const loadNewContent = () => {
