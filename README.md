@@ -1,3 +1,5 @@
+# If you somehow found this repo, ignore it. This is just the boring stuff. 
+
 # Portfolio Codebase Documentation for AI Agents
 
 This document contains essential context and constraints for AI agents generating or modifying code for this portfolio site.
