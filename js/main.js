@@ -176,12 +176,46 @@
       });
     });
 
+    let resizeScheduled = false;
     window.addEventListener('resize', () => {
-      if (currentActiveLink) movePill(currentActiveLink, false);
+      if (resizeScheduled) return;
+      resizeScheduled = true;
+      requestAnimationFrame(() => {
+        if (currentActiveLink) movePill(currentActiveLink, false);
+        resizeScheduled = false;
+      });
     }, { passive: true });
   }
 
   initNavIndicator();
+
+  /* ── MAGNETIC HOVER FOR ABOUT TEXT ── */
+  function initAboutTextMagnetic() {
+    const aboutText = document.querySelector('.about-simple-text');
+    if (!aboutText) return;
+
+    // Dynamically wrap each word in a span to apply the magnetic effect individually
+    const rawText = aboutText.textContent.trim();
+    const words = rawText.split(/\s+/);
+    aboutText.innerHTML = words.map(word => `<span class="about-word">${word}</span>`).join(' ');
+
+    // Register event listeners for each word
+    const wordSpans = aboutText.querySelectorAll('.about-word');
+    wordSpans.forEach(span => {
+      span.addEventListener('mousemove', (e) => {
+        const rect = span.getBoundingClientRect();
+        const relX = e.clientX - rect.left - rect.width / 2;
+        const relY = e.clientY - rect.top - rect.height / 2;
+        gsap.to(span, { x: relX * 0.35, y: relY * 0.45, duration: 0.3, ease: 'power2.out' });
+      });
+
+      span.addEventListener('mouseleave', () => {
+        gsap.to(span, { x: 0, y: 0, duration: 0.6, ease: 'elastic.out(1, 0.4)' });
+      });
+    });
+  }
+
+  initAboutTextMagnetic();
 
 
   /* ══════════════════════════════
@@ -190,26 +224,72 @@
   const grid = document.getElementById('galleryGrid');
   let visibleWorks = [];
 
-  function buildTiles(list) {
+  async function renderPdfThumbnail(pdfUrl, imgEl) {
+    try {
+      if (typeof pdfjsLib === 'undefined') return;
+      if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+      }
+      const loadingTask = pdfjsLib.getDocument(pdfUrl);
+      const pdf = await loadingTask.promise;
+      const page = await pdf.getPage(1);
+      
+      const canvas = document.createElement('canvas');
+      const viewport = page.getViewport({ scale: 1.0 });
+      const scale = 500 / viewport.width;
+      const scaledViewport = page.getViewport({ scale: scale });
+      
+      canvas.width = scaledViewport.width;
+      canvas.height = scaledViewport.height;
+      
+      const ctx = canvas.getContext('2d');
+      await page.render({
+        canvasContext: ctx,
+        viewport: scaledViewport
+      }).promise;
+      
+      imgEl.src = canvas.toDataURL();
+    } catch (err) {
+      console.error("Error rendering PDF thumbnail:", err);
+    }
+  }
+
+  function buildAllTiles() {
     if (!grid) return;
     grid.innerHTML = '';
-    list.forEach((work, idx) => {
+    const worksList = (typeof WORKS !== 'undefined') ? WORKS : [];
+    worksList.forEach((work, idx) => {
       const tile = document.createElement('article');
       tile.className = 'tile';
       tile.dataset.cat   = work.cat;
-      tile.dataset.index = idx;
+      tile.dataset.globalIndex = idx;
       tile.setAttribute('role', 'button');
       tile.setAttribute('tabindex', '0');
       tile.setAttribute('aria-label', 'View ' + work.title);
+      
+      // Speed up rendering by skipping off-screen layout/paint
+      tile.style.contentVisibility = 'auto';
+      tile.style.containIntrinsicSize = 'auto 300px';
 
       if (work.img) {
         const img     = document.createElement('img');
         img.className = 'tile-img';
         img.src       = work.thumb || work.img;
         img.alt       = work.title;
-        img.loading   = idx < 8 ? 'eager' : 'lazy';
+        // Prioritize above-the-fold image loads (first 4) for faster LCP
+        if (idx < 4) {
+          img.loading   = 'eager';
+          img.fetchPriority = 'high';
+        } else {
+          img.loading   = 'lazy';
+          img.fetchPriority = 'low';
+        }
         img.decoding  = 'async';
         tile.appendChild(img);
+
+        if (work.pdf) {
+          renderPdfThumbnail(work.pdf, img);
+        }
       } else {
         const ph = document.createElement('div');
         ph.className = 'tile-placeholder';
@@ -226,9 +306,9 @@
         (work.year ? '<p class="tile-year">' + work.year + '</p>' : '');
       tile.appendChild(ov);
 
-      tile.addEventListener('click', () => openLightbox(idx));
+      tile.addEventListener('click', () => openLightbox(tile));
       tile.addEventListener('keydown', e => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openLightbox(idx); }
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openLightbox(tile); }
       });
 
       grid.appendChild(tile);
@@ -245,29 +325,38 @@
   }
 
   /* ── SCROLL REVEAL ── */
+  let ioInstance = null;
   function initScrollReveal() {
     if (!grid) return;
-    const io = new IntersectionObserver(entries => {
+    if (ioInstance) {
+      ioInstance.disconnect();
+    }
+    ioInstance = new IntersectionObserver(entries => {
       entries.forEach(entry => {
         if (!entry.isIntersecting) return;
         
-        // Dynamically compute layout delay based on viewport width (matching css rules)
         let cols = 4;
         const w = window.innerWidth;
         if (w <= 600) cols = 1;
         else if (w <= 1024) cols = 2;
 
-        const col = parseInt(entry.target.dataset.index, 10) % cols;
+        const globalIdx = parseInt(entry.target.dataset.globalIndex, 10);
+        const visibleTiles = Array.from(grid.querySelectorAll('.tile:not(.hidden-tile)'));
+        const visibleIdx = visibleTiles.indexOf(entry.target);
+        
+        const col = (visibleIdx !== -1 ? visibleIdx : globalIdx) % cols;
         entry.target.style.transitionDelay = (col * 50) + 'ms';
         entry.target.classList.add('visible');
-        io.unobserve(entry.target);
+        ioInstance.unobserve(entry.target);
       });
     }, { threshold: 0.04, rootMargin: '0px 0px -20px 0px' });
 
-    grid.querySelectorAll('.tile').forEach(t => io.observe(t));
+    grid.querySelectorAll('.tile:not(.hidden-tile)').forEach(t => ioInstance.observe(t));
   }
 
   /* ── ROUTING / FILTERING ── */
+  let activeFilterTimeout = null;
+
   function filterCategory(cat, animate = true) {
     const worksList = (typeof WORKS !== 'undefined')
       ? (cat === 'all' ? WORKS : WORKS.filter(w => w.cat === cat))
@@ -286,28 +375,64 @@
 
     if (!grid) return;
 
-    if (animate) {
-      const tiles = grid.querySelectorAll('.tile');
-      if (tiles.length > 0) {
-        tiles.forEach((t, i) => {
+    if (activeFilterTimeout) {
+      clearTimeout(activeFilterTimeout);
+      activeFilterTimeout = null;
+    }
+
+    const tiles = grid.querySelectorAll('.tile');
+
+    if (animate && tiles.length > 0) {
+      // Phase 1: Fade out active tiles with stagger
+      tiles.forEach((t, i) => {
+        if (!t.classList.contains('hidden-tile')) {
           let cols = 4;
           const w = window.innerWidth;
           if (w <= 600) cols = 1;
           else if (w <= 1024) cols = 2;
 
-          const col = parseInt(t.dataset.index || i, 10) % cols;
+          const visibleTiles = Array.from(grid.querySelectorAll('.tile:not(.hidden-tile)'));
+          const visibleIdx = visibleTiles.indexOf(t);
+
+          const col = (visibleIdx !== -1 ? visibleIdx : i) % cols;
           t.style.transitionDelay = `${col * 40}ms`;
           t.style.transitionDuration = '0.25s';
           t.classList.add('is-exiting');
+        }
+      });
+
+      activeFilterTimeout = setTimeout(() => {
+        // Phase 2: Toggle hidden states and reset style classes
+        tiles.forEach(t => {
+          const matches = (cat === 'all' || t.dataset.cat === cat);
+          if (matches) {
+            t.classList.remove('hidden-tile');
+          } else {
+            t.classList.add('hidden-tile');
+          }
+          t.classList.remove('visible', 'is-exiting');
+          t.style.transitionDelay = '';
+          t.style.transitionDuration = '';
         });
-        setTimeout(() => {
-          buildTiles(worksList);
-        }, 350);
-      } else {
-        buildTiles(worksList);
-      }
+        
+        // Reinitialize scroll reveal for newly shown tiles
+        initScrollReveal();
+        activeFilterTimeout = null;
+      }, 250);
     } else {
-      buildTiles(worksList);
+      // Instant change
+      tiles.forEach(t => {
+        const matches = (cat === 'all' || t.dataset.cat === cat);
+        if (matches) {
+          t.classList.remove('hidden-tile');
+        } else {
+          t.classList.add('hidden-tile');
+        }
+        t.classList.remove('visible', 'is-exiting');
+        t.style.transitionDelay = '';
+        t.style.transitionDuration = '';
+      });
+      initScrollReveal();
     }
   }
 
@@ -319,6 +444,7 @@
   }
 
   if (grid) {
+    buildAllTiles();
     const initialHash = window.location.hash.substring(1) || 'all';
     filterCategory(initialHash, false);
     
@@ -391,12 +517,27 @@
       }
     }
 
-    openLightbox = function(idx) {
-      currentIdx = idx;
+    openLightbox = function(tile) {
+      const visibleTiles = Array.from(grid ? grid.querySelectorAll('.tile:not(.hidden-tile)') : []);
+      const visibleIdx = visibleTiles.indexOf(tile);
+      if (visibleIdx === -1) return;
+
+      currentIdx = visibleIdx;
+      
+      const currentCat = window.location.hash.substring(1) || 'all';
+      visibleWorks = (typeof WORKS !== 'undefined')
+        ? (currentCat === 'all' ? WORKS : WORKS.filter(w => w.cat === currentCat))
+        : [];
+
+      const clickedWork = visibleWorks[currentIdx];
+      if (clickedWork && (clickedWork.pdf || clickedWork.pages)) {
+        openBookLightbox(clickedWork);
+        return;
+      }
+
       document.body.classList.add('lightbox-active');
       
-      const tiles = grid ? grid.querySelectorAll('.tile') : [];
-      const clickedImg = tiles[idx] ? tiles[idx].querySelector('.tile-img') : null;
+      const clickedImg = tile.querySelector('.tile-img');
       
       if (clickedImg) {
         const firstRect = clickedImg.getBoundingClientRect();
@@ -405,7 +546,7 @@
         const naturalH = clickedImg.naturalHeight || clickedImg.height;
         
         // Render slide structure (resets zoom, sets lbImg.src, triggers load)
-        renderSlide(idx);
+        renderSlide(currentIdx);
         
         // Hide the real image initially so it doesn't show during zoom
         lbImg.style.opacity = '0';
@@ -511,7 +652,7 @@
         }, 450);
         
       } else {
-        renderSlide(idx);
+        renderSlide(currentIdx);
         lbImg.style.opacity = '1';
         lb.classList.add('open');
         lb.setAttribute('aria-hidden', 'false');
@@ -522,8 +663,8 @@
 
     function closeLightbox() {
       document.body.classList.remove('lightbox-active');
-      const tiles = grid ? grid.querySelectorAll('.tile') : [];
-      const tileImg = tiles[currentIdx] ? tiles[currentIdx].querySelector('.tile-img') : null;
+      const visibleTiles = Array.from(grid ? grid.querySelectorAll('.tile:not(.hidden-tile)') : []);
+      const tileImg = visibleTiles[currentIdx] ? visibleTiles[currentIdx].querySelector('.tile-img') : null;
       
       if (tileImg && lbImg && lbImg.getAttribute('src')) {
         if (scale > 1) {
@@ -584,9 +725,9 @@
       }
 
       // Hide corresponding gallery tile image
-      const tiles = grid ? grid.querySelectorAll('.tile') : [];
-      if (tiles[idx]) {
-        const tileImg = tiles[idx].querySelector('.tile-img');
+      const visibleTiles = Array.from(grid ? grid.querySelectorAll('.tile:not(.hidden-tile)') : []);
+      if (visibleTiles[idx]) {
+        const tileImg = visibleTiles[idx].querySelector('.tile-img');
         hideTileImg(tileImg);
       } else {
         restoreTileImg();
@@ -786,6 +927,408 @@
       }
       tX = null;
     }, { passive: true });
+
+    // ─── BOOK LIGHTBOX IMPLEMENTATION ───
+    const bl = document.getElementById('bookLightbox');
+    const blBook = document.getElementById('blBook');
+    const blClose = document.getElementById('blClose');
+    const blPrevBtn = document.getElementById('blPrevBtn');
+    const blNextBtn = document.getElementById('blNextBtn');
+    const blPageLabel = document.getElementById('blPageLabel');
+    const blSlider = document.getElementById('blProgressSlider');
+    const blLoader = document.getElementById('blLoader');
+    const blTapLeft = document.getElementById('blTapLeft');
+    const blTapRight = document.getElementById('blTapRight');
+
+    let activeBook = null;
+    let totalPages = 0;
+    let totalSheets = 0;
+    let activeSheetIndex = 0;
+    let isDoublePageMode = window.innerWidth > 768;
+    let sheets = [];
+    const renderedPages = new Set();
+
+    function buildBookDOM() {
+      blBook.innerHTML = '';
+      sheets = [];
+      renderedPages.clear();
+
+      for (let i = 0; i < totalSheets; i++) {
+        const sheetEl = document.createElement('div');
+        sheetEl.className = 'bl-sheet right-side';
+        sheetEl.dataset.sheetIndex = i;
+        
+        // Front face
+        const frontFace = document.createElement('div');
+        frontFace.className = 'bl-page bl-page--front';
+        const frontContent = document.createElement('div');
+        frontContent.className = 'bl-page-content';
+        frontFace.appendChild(frontContent);
+        const frontTexture = document.createElement('div');
+        frontTexture.className = 'bl-page-texture';
+        frontFace.appendChild(frontTexture);
+        
+        // Back face
+        const backFace = document.createElement('div');
+        backFace.className = 'bl-page bl-page--back';
+        const backContent = document.createElement('div');
+        backContent.className = 'bl-page-content';
+        backFace.appendChild(backContent);
+        const backTexture = document.createElement('div');
+        backTexture.className = 'bl-page-texture';
+        backFace.appendChild(backTexture);
+
+        sheetEl.appendChild(frontFace);
+        sheetEl.appendChild(backFace);
+        blBook.appendChild(sheetEl);
+        sheets.push(sheetEl);
+      }
+    }
+
+    function updateSheetStates() {
+      for (let j = 0; j < totalSheets; j++) {
+        const sheet = sheets[j];
+        if (j < activeSheetIndex) {
+          sheet.classList.add('flipped');
+          sheet.style.zIndex = j;
+        } else {
+          sheet.classList.remove('flipped');
+          sheet.style.zIndex = totalSheets - j;
+        }
+      }
+      
+      // Keep active sheets on top during turns
+      if (activeSheetIndex > 0 && sheets[activeSheetIndex - 1]) {
+        sheets[activeSheetIndex - 1].style.zIndex = totalSheets + 5;
+      }
+      if (activeSheetIndex < totalSheets && sheets[activeSheetIndex]) {
+        sheets[activeSheetIndex].style.zIndex = totalSheets + 4;
+      }
+    }
+
+    function updateControls() {
+      if (isDoublePageMode) {
+        blSlider.max = totalSheets;
+        blSlider.value = activeSheetIndex;
+        
+        if (activeSheetIndex === 0) {
+          blPageLabel.textContent = `Page 1 of ${totalPages} (Cover)`;
+        } else if (activeSheetIndex === totalSheets) {
+          blPageLabel.textContent = `Page ${totalPages} of ${totalPages} (Back)`;
+        } else {
+          const leftPage = activeSheetIndex * 2;
+          const rightPage = activeSheetIndex * 2 + 1;
+          if (rightPage <= totalPages) {
+            blPageLabel.textContent = `Pages ${leftPage}-${rightPage} of ${totalPages}`;
+          } else {
+            blPageLabel.textContent = `Page ${leftPage} of ${totalPages}`;
+          }
+        }
+      } else {
+        blSlider.max = totalPages - 1;
+        blSlider.value = activeSheetIndex;
+        blPageLabel.textContent = `Page ${activeSheetIndex + 1} of ${totalPages}`;
+      }
+    }
+
+    function navigateBook(direction) {
+      const maxIndex = isDoublePageMode ? totalSheets : totalPages - 1;
+      const newIndex = activeSheetIndex + direction;
+      
+      if (newIndex >= 0 && newIndex <= maxIndex) {
+        activeSheetIndex = newIndex;
+        updateSheetStates();
+        lazyRenderPages();
+        updateControls();
+      }
+    }
+
+    function lazyRenderPages() {
+      const pagesToRender = [];
+      
+      if (isDoublePageMode) {
+        // Current visible page index references (1-based)
+        const leftPage = activeSheetIndex * 2;
+        const rightPage = activeSheetIndex * 2 + 1;
+        
+        if (leftPage >= 1 && leftPage <= totalPages) pagesToRender.push(leftPage);
+        if (rightPage >= 1 && rightPage <= totalPages) pagesToRender.push(rightPage);
+        
+        // Next preload pages
+        const nextLeft = (activeSheetIndex + 1) * 2;
+        const nextRight = (activeSheetIndex + 1) * 2 + 1;
+        if (nextLeft >= 1 && nextLeft <= totalPages) pagesToRender.push(nextLeft);
+        if (nextRight >= 1 && nextRight <= totalPages) pagesToRender.push(nextRight);
+        
+        // Prev preload pages
+        const prevLeft = (activeSheetIndex - 1) * 2;
+        const prevRight = (activeSheetIndex - 1) * 2 + 1;
+        if (prevLeft >= 1 && prevLeft <= totalPages) pagesToRender.push(prevLeft);
+        if (prevRight >= 1 && prevRight <= totalPages) pagesToRender.push(prevRight);
+      } else {
+        // Current visible
+        const currentPage = activeSheetIndex + 1;
+        if (currentPage >= 1 && currentPage <= totalPages) pagesToRender.push(currentPage);
+        
+        // Next preload
+        const nextPage = activeSheetIndex + 2;
+        if (nextPage >= 1 && nextPage <= totalPages) pagesToRender.push(nextPage);
+        
+        // Prev preload
+        const prevPage = activeSheetIndex;
+        if (prevPage >= 1 && prevPage <= totalPages) pagesToRender.push(prevPage);
+      }
+
+      pagesToRender.forEach(pageNum => {
+        if (renderedPages.has(pageNum)) return;
+        renderedPages.add(pageNum);
+        renderPage(pageNum);
+      });
+    }
+
+    async function renderPage(pageNum) {
+      let sheetIdx, faceSide;
+      
+      if (isDoublePageMode) {
+        sheetIdx = Math.floor((pageNum - 1) / 2);
+        faceSide = (pageNum % 2 === 1) ? 'front' : 'back';
+      } else {
+        sheetIdx = pageNum - 1;
+        faceSide = 'front';
+      }
+      
+      const sheetEl = sheets[sheetIdx];
+      if (!sheetEl) return;
+      
+      const faceEl = sheetEl.querySelector(`.bl-page--${faceSide}`);
+      if (!faceEl) return;
+      
+      const contentEl = faceEl.querySelector('.bl-page-content');
+      contentEl.innerHTML = ''; 
+
+      if (activeBook.type === 'pdf') {
+        const canvas = document.createElement('canvas');
+        contentEl.appendChild(canvas);
+        
+        try {
+          const page = await activeBook.pdfDoc.getPage(pageNum);
+          const viewport = page.getViewport({ scale: 1.5 });
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          
+          const ctx = canvas.getContext('2d');
+          await page.render({
+            canvasContext: ctx,
+            viewport: viewport
+          }).promise;
+        } catch (err) {
+          console.error("Error rendering PDF page:", err);
+          drawMockPage(pageNum, contentEl);
+        }
+      } else if (activeBook.type === 'images') {
+        const img = document.createElement('img');
+        img.src = activeBook.pagesList[pageNum - 1];
+        img.alt = `Book page ${pageNum}`;
+        contentEl.appendChild(img);
+      } else {
+        drawMockPage(pageNum, contentEl);
+      }
+    }
+
+    function drawMockPage(pageNum, container) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 600;
+      canvas.height = 800;
+      const ctx = canvas.getContext('2d');
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      
+      ctx.fillStyle = isLight ? '#fafafa' : '#222';
+      ctx.fillRect(0, 0, 600, 800);
+      
+      ctx.strokeStyle = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.08)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(30, 30, 540, 740);
+      
+      ctx.fillStyle = isLight ? 'rgba(0, 0, 0, 0.4)' : 'rgba(255, 255, 255, 0.4)';
+      ctx.font = '10px "JetBrains Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(`PAGE ${pageNum}`, 300, 750);
+      ctx.fillText("LAM NGUYEN ART PORTFOLIO", 300, 55);
+      
+      ctx.fillStyle = isLight ? '#333' : '#eee';
+      ctx.font = '300 24px "IBM Plex Serif", serif';
+      ctx.fillText(`Section ${pageNum}`, 300, 200);
+      
+      ctx.fillStyle = isLight ? '#666' : '#aaa';
+      ctx.font = '14px "IBM Plex Serif", serif';
+      ctx.fillText("Interactive Book Showcase", 300, 240);
+      
+      ctx.strokeStyle = isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)';
+      ctx.beginPath();
+      ctx.moveTo(100, 320);
+      ctx.lineTo(500, 320);
+      ctx.moveTo(100, 360);
+      ctx.lineTo(500, 360);
+      ctx.moveTo(100, 400);
+      ctx.lineTo(500, 400);
+      ctx.moveTo(150, 440);
+      ctx.lineTo(450, 440);
+      ctx.stroke();
+
+      ctx.fillStyle = '#c8a96e';
+      ctx.beginPath();
+      ctx.arc(300, 550, 30, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.fillStyle = isLight ? '#fff' : '#000';
+      ctx.font = 'bold 16px "JetBrains Mono", monospace';
+      ctx.fillText("LN", 300, 556);
+
+      container.appendChild(canvas);
+    }
+
+    async function openBookLightbox(workItem) {
+      document.body.classList.add('lightbox-active');
+      bl.classList.add('open');
+      bl.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      
+      blLoader.classList.add('active');
+      
+      activeBook = null;
+      totalPages = 0;
+      activeSheetIndex = 0;
+      
+      if (workItem.pdf) {
+        try {
+          pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+          const loadingTask = pdfjsLib.getDocument(workItem.pdf);
+          const pdfDoc = await loadingTask.promise;
+          activeBook = { type: 'pdf', pdfDoc, path: workItem.pdf };
+          totalPages = pdfDoc.numPages;
+        } catch (err) {
+          console.error("Error loading PDF:", err);
+          activeBook = { type: 'mock', path: workItem.pdf };
+          totalPages = 6;
+        }
+      } else if (workItem.pages) {
+        activeBook = { type: 'images', pagesList: workItem.pages };
+        totalPages = workItem.pages.length;
+      }
+      
+      blLoader.classList.remove('active');
+      
+      isDoublePageMode = window.innerWidth > 768;
+      totalSheets = isDoublePageMode ? Math.ceil(totalPages / 2) : totalPages;
+      
+      buildBookDOM();
+      updateSheetStates();
+      lazyRenderPages();
+      updateControls();
+      
+      blClose.focus();
+    }
+
+    function closeBookLightbox() {
+      bl.classList.remove('open');
+      bl.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('lightbox-active');
+      document.body.style.overflow = '';
+      
+      setTimeout(() => {
+        blBook.innerHTML = '';
+        sheets = [];
+        renderedPages.clear();
+        activeBook = null;
+      }, 500);
+    }
+
+    // Bind controls
+    blClose.addEventListener('click', closeBookLightbox);
+    blPrevBtn.addEventListener('click', () => navigateBook(-1));
+    blNextBtn.addEventListener('click', () => navigateBook(1));
+    
+    blTapLeft.addEventListener('click', e => {
+      e.stopPropagation();
+      navigateBook(-1);
+    });
+    blTapRight.addEventListener('click', e => {
+      e.stopPropagation();
+      navigateBook(1);
+    });
+
+    blSlider.addEventListener('input', e => {
+      const val = parseInt(e.target.value, 10);
+      if (val !== activeSheetIndex) {
+        activeSheetIndex = val;
+        updateSheetStates();
+        lazyRenderPages();
+        updateControls();
+      }
+    });
+
+    bl.addEventListener('click', e => {
+      if (e.target === bl || e.target === bl.querySelector('.bl-container')) {
+        closeBookLightbox();
+      }
+    });
+
+    // Mobile touch gestures
+    let startTouchX = null;
+    let startTouchY = null;
+    bl.addEventListener('touchstart', e => {
+      if (e.touches.length === 1) {
+        startTouchX = e.touches[0].clientX;
+        startTouchY = e.touches[0].clientY;
+      }
+    }, { passive: true });
+
+    bl.addEventListener('touchend', e => {
+      if (startTouchX === null) return;
+      if (e.changedTouches.length > 0) {
+        const deltaX = e.changedTouches[0].clientX - startTouchX;
+        const deltaY = e.changedTouches[0].clientY - startTouchY;
+        if (Math.abs(deltaX) > 50 && Math.abs(deltaY) < 100) {
+          if (deltaX < 0) navigateBook(1);
+          else navigateBook(-1);
+        }
+      }
+      startTouchX = null;
+    }, { passive: true });
+
+    // Keyboard support
+    document.addEventListener('keydown', e => {
+      if (!bl.classList.contains('open')) return;
+      if (e.key === 'Escape') closeBookLightbox();
+      if (e.key === 'ArrowLeft') navigateBook(-1);
+      if (e.key === 'ArrowRight') navigateBook(1);
+    });
+
+    // Resize handling
+    let bookResizeTimeout = null;
+    window.addEventListener('resize', () => {
+      if (!bl.classList.contains('open')) return;
+      if (bookResizeTimeout) clearTimeout(bookResizeTimeout);
+      bookResizeTimeout = setTimeout(() => {
+        const mode = window.innerWidth > 768;
+        if (mode !== isDoublePageMode) {
+          const currentPageNum = isDoublePageMode ? (activeSheetIndex * 2 || 1) : (activeSheetIndex + 1);
+          isDoublePageMode = mode;
+          totalSheets = isDoublePageMode ? Math.ceil(totalPages / 2) : totalPages;
+          
+          if (isDoublePageMode) {
+            activeSheetIndex = Math.floor((currentPageNum - 1) / 2);
+          } else {
+            activeSheetIndex = currentPageNum - 1;
+          }
+          
+          buildBookDOM();
+          updateSheetStates();
+          lazyRenderPages();
+          updateControls();
+        }
+      }, 150);
+    });
   }
 
   /* ══════════════════════════════

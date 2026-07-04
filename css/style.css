@@ -23,7 +23,7 @@ html[data-theme="light"] {
   --cat-3d: #0a9396;
   --cat-design: #0077b6;
 
-  --font-display: 'IBM Plex Serif', Georgia, serif;
+  --font-display: 'Instrument Serif', Georgia, serif;
   --font-mono: 'JetBrains Mono', 'Courier New', monospace;
 
   --site-nav-height: 82px;
@@ -64,12 +64,12 @@ body {
 }
 
 /* Smoothly transition blur filter for all top-level page components */
-body > *:not(.lightbox):not(.lb-flip-temp) {
+body > *:not(.lightbox):not(.book-lightbox):not(.lb-flip-temp) {
   transition: filter 0.45s var(--ease);
 }
 
 /* Apply deep blur to the whole site behind the zooming image when lightbox is active */
-body.lightbox-active > *:not(.lightbox):not(.lb-flip-temp) {
+body.lightbox-active > *:not(.lightbox):not(.book-lightbox):not(.lb-flip-temp) {
   filter: blur(8px) saturate(0.85);
 }
 
@@ -180,25 +180,69 @@ html[data-theme="dark"] .site-header {
 /* logo – left */
 .logo {
   display: flex;
-  flex-direction: column;
-  gap: 1px;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  transition: transform 0.25s var(--ease);
 }
 
-.logo-name {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.25em;
-  color: var(--ink);
-  font-weight: 700;
-  line-height: 1.2;
+.logo:hover {
+  transform: scale(1.08); /* Same scale animation as close/arrow buttons */
 }
 
-.logo-sub {
-  font-family: var(--font-mono);
-  font-size: 0.55rem;
-  letter-spacing: 0.18em;
-  color: var(--ink-muted);
-  line-height: 1;
+.logo-inner {
+  position: relative;
+  width: 59px; /* x1.7 of 35px is approx 59px */
+  height: 22px; /* x1.7 of 13px is approx 22px */
+  display: block;
+}
+
+.site-logo-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  transition: opacity 0.25s var(--ease), transform 0.25s var(--ease);
+}
+
+/* Default state: solid logo visible, outline logo hidden */
+.logo-white {
+  opacity: 0;
+  transform: scale(0.92);
+}
+
+.logo-black {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Hover state: outline logo visible, solid logo hidden */
+.logo:hover .logo-white {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.logo:hover .logo-black {
+  opacity: 0;
+  transform: scale(0.92);
+}
+
+.logo-white-path {
+  fill: var(--paper);
+  stroke: var(--ink);
+  stroke-width: 3px;
+  stroke-miterlimit: 10;
+  transition: fill 0.25s var(--ease), stroke 0.25s var(--ease);
+}
+
+.logo-black-path {
+  fill: var(--ink);
+  transition: fill 0.25s var(--ease);
 }
 
 /* ── CATEGORY NAV (centre, absolute) ── */
@@ -397,6 +441,11 @@ html[data-theme="dark"] .ef-layer {
   margin-bottom: 6px;
   border-radius: 6px;
   padding: 2px;
+}
+
+/* Hidden state for category filtering */
+.tile.hidden-tile {
+  display: none !important;
 }
 
 /* Lock tiles while loader is active to prevent premature animations */
@@ -839,58 +888,7 @@ html[data-theme="dark"] .tile::before {
   fill: none;
 }
 
-/* Entrance float-in animations for details */
-.lb-left-meta,
-.lb-right,
-.lb-prev,
-.lb-next,
-.lb-close {
-  opacity: 0;
-}
 
-.lb-left-meta {
-  transform: translateX(-15px);
-  transition: opacity 0.5s var(--ease-out), transform 0.5s var(--ease-out);
-  transition-delay: 0.45s;
-}
-
-.lb-right {
-  transform: translateX(15px);
-  transition: opacity 0.5s var(--ease-out), transform 0.5s var(--ease-out);
-  transition-delay: 0.45s;
-}
-
-.lb-close {
-  transform: translateY(-10px);
-  transition-delay: 0s, 0s, 0s, 0.55s, 0.55s;
-}
-
-.lb-prev {
-  transform: translateY(-50%) translateX(-10px);
-  transition-delay: 0s, 0s, 0s, 0.5s, 0.5s;
-}
-
-.lb-next {
-  transform: translateY(-50%) translateX(10px);
-  transition-delay: 0s, 0s, 0s, 0.5s, 0.5s;
-}
-
-.lightbox.open .lb-left-meta,
-.lightbox.open .lb-right {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.lightbox.open .lb-close {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.lightbox.open .lb-prev,
-.lightbox.open .lb-next {
-  opacity: 1;
-  transform: translateY(-50%) translateX(0);
-}
 
 /* ── LIGHTBOX LIGHT THEME ── */
 html[data-theme="light"] .lightbox {
@@ -1063,160 +1061,39 @@ html.theme-transition .ef-layer {
    ABOUT PAGE
    ══════════════════════════════════════════════ */
 
-.about-page {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: calc(var(--site-nav-height) + 3rem) 2rem 6rem;
-}
-
-.about-grid {
-  display: grid;
-  grid-template-columns: 1fr 400px;
-  gap: 5rem;
-  align-items: start;
-  margin-bottom: 6rem;
-}
-
-.about-heading {
-  font-family: var(--font-display);
-  font-size: clamp(2.2rem, 4.5vw, 4rem);
-  font-weight: 300;
-  line-height: 1.05;
-  letter-spacing: -0.02em;
-  margin-bottom: 2rem;
-  color: var(--ink);
-}
-
-.about-heading em {
-  font-style: italic;
-  color: var(--accent);
-}
-
-.about-body {
-  font-family: var(--font-display);
-  font-size: 1.15rem;
-  color: var(--ink-muted);
-  line-height: 1.75;
-  margin-bottom: 1.2rem;
-  max-width: 52ch;
-}
-
-.about-body em {
-  color: var(--ink);
-  font-style: italic;
-}
-
-.about-contact {
-  margin-top: 2.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.2rem;
-}
-
-.contact-cta {
-  display: inline-block;
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.18em;
-  padding: 0.9rem 2rem;
-  border: 1px solid var(--accent);
-  color: var(--accent);
-  transition: background 0.2s, color 0.2s;
-  align-self: flex-start;
-}
-
-.contact-cta:hover {
-  background: var(--accent);
-  color: var(--paper);
-}
-
-.about-links {
-  display: flex;
-  gap: 1.5rem;
-}
-
-.about-links a {
-  font-family: var(--font-mono);
-  font-size: 0.62rem;
-  letter-spacing: 0.14em;
-  color: var(--ink-muted);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  transition: color 0.2s;
-}
-
-.about-links a:hover {
-  color: var(--ink);
-}
-
-.about-img-wrap {
-  position: sticky;
-  top: calc(var(--site-nav-height) + 2rem);
-}
-
-.about-img-placeholder {
-  aspect-ratio: 3/4;
-  background: rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(0, 0, 0, 0.08);
+.about-page-simple {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-mono);
-  font-size: 0.6rem;
-  letter-spacing: 0.2em;
-  color: var(--ink-muted);
+  overflow: hidden;
+  padding: calc(var(--site-nav-height) + 1rem) 2rem calc(var(--site-footer-height) + 1rem);
+}
+
+.about-simple-content {
+  position: relative;
+  z-index: 10;
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
   text-align: center;
-  line-height: 2;
 }
 
-.about-img-caption {
-  display: flex;
-  justify-content: space-between;
-  padding: 0.5rem 0;
-  font-family: var(--font-mono);
-  font-size: 0.52rem;
-  letter-spacing: 0.12em;
-  color: var(--ink-muted);
-}
-
-.about-services {
-  border-top: 1px solid rgba(31, 31, 31, 0.12);
-  padding-top: 4rem;
-}
-
-.services-heading {
-  font-family: var(--font-mono);
-  font-size: 0.62rem;
-  letter-spacing: 0.25em;
-  color: var(--ink-muted);
-  margin-bottom: 2.5rem;
-}
-
-.services-list {
-  list-style: none;
-}
-
-.services-list li {
-  display: grid;
-  grid-template-columns: 120px 1fr;
-  align-items: baseline;
-  padding: 1.5rem 0;
-  border-bottom: 1px solid rgba(31, 31, 31, 0.1);
-  gap: 2rem;
-}
-
-.service-cat {
-  font-family: var(--font-mono);
-  font-size: 0.6rem;
-  letter-spacing: 0.2em;
-  color: var(--accent);
-}
-
-.service-desc {
+.about-simple-text {
   font-family: var(--font-display);
-  font-size: 1.15rem;
-  color: var(--ink-muted);
-  font-style: italic;
+  font-size: clamp(1.8rem, 4vw, 3.8rem);
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+
+.about-word {
+  display: inline-block;
+  will-change: transform;
 }
 
 
@@ -1333,5 +1210,473 @@ html.theme-transition .ef-layer {
 
   .site-header {
     padding: 0 1rem;
+  }
+}
+
+/* ══════════════════════════════════════════════
+   BOOK LIGHTBOX (3D PAGE FLIP)
+   ══════════════════════════════════════════════ */
+
+.book-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 350; /* Above regular lightbox */
+  background: rgba(10, 10, 10, 0);
+  backdrop-filter: blur(0px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s cubic-bezier(0.25, 1, 0.5, 1), 
+              background-color 0.5s cubic-bezier(0.25, 1, 0.5, 1),
+              backdrop-filter 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+  --book-width: 860px;
+  --book-height: 580px;
+}
+
+.book-lightbox.open {
+  opacity: 1;
+  pointer-events: all;
+  background: rgba(10, 10, 10, 0.93);
+  backdrop-filter: blur(25px);
+}
+
+/* Light theme support */
+html[data-theme="light"] .book-lightbox.open {
+  background: rgba(250, 250, 250, 0.93);
+}
+
+/* Container limits & centering */
+.bl-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 90vw;
+  height: 75vh;
+  position: relative;
+  opacity: 0;
+  transform: translateY(25px) scale(0.97);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), 
+              transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.book-lightbox.open .bl-container {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* 3D Book wrapper */
+.bl-book {
+  position: relative;
+  width: var(--book-width);
+  height: var(--book-height);
+  perspective: 2500px;
+  transform-style: preserve-3d;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.3s ease;
+}
+
+/* Sheet styles */
+.bl-sheet {
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.8s cubic-bezier(0.2, 1, 0.2, 1);
+  will-change: transform;
+}
+
+/* Unflipped (Right) Sheets */
+.bl-sheet.right-side {
+  left: 50%;
+  transform-origin: left center;
+}
+
+/* Flipped (Left) Sheets */
+.bl-sheet.flipped {
+  transform: rotateY(-180deg);
+}
+
+/* Front & Back page faces */
+.bl-page {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  background: #181818;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: inset -2px 0 10px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 4px;
+  user-select: none;
+}
+
+/* Light Theme Pages */
+html[data-theme="light"] .bl-page {
+  background: #fdfdfd;
+  border-color: rgba(0, 0, 0, 0.06);
+  box-shadow: inset -2px 0 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Back side of sheets faces backward initially */
+.bl-page.bl-page--back {
+  transform: rotateY(180deg);
+  box-shadow: inset 2px 0 10px rgba(0, 0, 0, 0.2);
+}
+
+html[data-theme="light"] .bl-page.bl-page--back {
+  box-shadow: inset 2px 0 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Soft inner fold shadow effect in the center spine */
+.bl-page::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 35px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.bl-page.bl-page--front::after {
+  left: 0;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0) 100%);
+}
+
+.bl-page.bl-page--back::after {
+  right: 0;
+  background: linear-gradient(to left, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0) 100%);
+}
+
+html[data-theme="light"] .bl-page.bl-page--front::after {
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.06) 0%, rgba(0, 0, 0, 0) 100%);
+}
+
+html[data-theme="light"] .bl-page.bl-page--back::after {
+  background: linear-gradient(to left, rgba(0, 0, 0, 0.06) 0%, rgba(0, 0, 0, 0) 100%);
+}
+
+/* Content wrapper */
+.bl-page-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: #111;
+}
+
+html[data-theme="light"] .bl-page-content {
+  background: #f8f8f8;
+}
+
+/* Rendered Canvas and Image Styles */
+.bl-page-content canvas,
+.bl-page-content img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* Soft paper texture overlay */
+.bl-page-texture {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size: 4px 4px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+html[data-theme="light"] .bl-page-texture {
+  background-image: radial-gradient(rgba(0,0,0,0.015) 1px, transparent 1px);
+}
+
+/* Close Button */
+.bl-close {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 380;
+  transition: all 0.25s ease;
+}
+
+html[data-theme="light"] .bl-close {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.08);
+  color: #000;
+}
+
+.bl-close:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #000;
+  transform: scale(1.08) rotate(90deg);
+}
+
+/* Tap Zones - Screen overlays to flip */
+.bl-tap-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 18%;
+  z-index: 360;
+  cursor: pointer;
+  opacity: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s ease;
+}
+
+.bl-tap-zone--left {
+  left: 0;
+}
+
+.bl-tap-zone--right {
+  right: 0;
+}
+
+.bl-tap-zone:hover {
+  opacity: 0.15;
+}
+
+/* Controls panel at the bottom */
+.bl-controls {
+  position: absolute;
+  bottom: 3.5rem;
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  z-index: 375;
+  background: rgba(24, 24, 24, 0.7);
+  backdrop-filter: blur(15px);
+  padding: 0.8rem 1.8rem;
+  border-radius: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  opacity: 0;
+  transform: translateY(15px);
+  transition: opacity 0.5s ease 0.2s, transform 0.5s ease 0.2s;
+}
+
+.book-lightbox.open .bl-controls {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+html[data-theme="light"] .bl-controls {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+}
+
+.bl-btn {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.7);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem;
+  border-radius: 50%;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+html[data-theme="light"] .bl-btn {
+  color: rgba(0,0,0,0.6);
+}
+
+.bl-btn:hover {
+  background: rgba(255,255,255,0.1);
+  color: var(--accent);
+}
+
+html[data-theme="light"] .bl-btn:hover {
+  background: rgba(0,0,0,0.05);
+}
+
+.bl-progress-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 180px;
+}
+
+.bl-page-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 0.05em;
+}
+
+html[data-theme="light"] .bl-page-label {
+  color: rgba(0,0,0,0.5);
+}
+
+.bl-progress-slider {
+  width: 100%;
+  height: 3px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 5px;
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+}
+
+html[data-theme="light"] .bl-progress-slider {
+  background: rgba(0,0,0,0.1);
+}
+
+.bl-progress-slider::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 3px;
+}
+
+.bl-progress-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  margin-top: -4.5px;
+  transition: transform 0.15s ease;
+}
+
+.bl-progress-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.3);
+}
+
+/* Spinner Loader Overlay */
+.bl-loader {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 10, 10, 0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 390;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+html[data-theme="light"] .bl-loader {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.bl-loader.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.bl-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: bl-spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+html[data-theme="light"] .bl-spinner {
+  border-color: rgba(0, 0, 0, 0.05);
+  border-top-color: var(--accent);
+}
+
+.bl-loader-text {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+html[data-theme="light"] .bl-loader-text {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+@keyframes bl-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── RESPONSIVE MEDIA QUERIES FOR BOOK LIGHTBOX ── */
+
+@media (max-width: 1024px) {
+  .book-lightbox {
+    --book-width: 90vw;
+    --book-height: calc(90vw * 0.67);
+  }
+}
+
+/* Portrait / Mobile View - Switch to single page flip */
+@media (max-width: 768px) {
+  .book-lightbox {
+    --book-width: min(420px, 86vw);
+    --book-height: min(600px, 60vh);
+  }
+  
+  .bl-sheet {
+    width: 100% !important; /* Full width sheets */
+  }
+
+  .bl-sheet.right-side {
+    left: 0 !important;
+  }
+  
+  /* Pivot on left center still, but swings full 180 degrees to clear screen */
+  .bl-sheet.flipped {
+    transform: rotateY(-180deg) translate3d(-100%, 0, 0); /* shift out of view */
+    pointer-events: none;
+  }
+  
+  .bl-page.bl-page--back {
+    display: none; /* In single page view we only show the front faces of the stacked sheets! */
+  }
+
+  .bl-page.bl-page--front::after {
+    display: none; /* Hide spine fold shadow */
+  }
+  
+  .bl-tap-zone {
+    width: 25%; /* larger tap zones on mobile */
+  }
+
+  .bl-controls {
+    bottom: 2rem;
+    padding: 0.6rem 1.2rem;
+    gap: 1rem;
+  }
+  
+  .bl-progress-wrap {
+    min-width: 120px;
   }
 }

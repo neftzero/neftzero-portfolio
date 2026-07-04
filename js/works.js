@@ -24,152 +24,189 @@ const WORKS = [
 
   /* ── 2D ── */
   {
-    id:    "2d-01",
+    id:    "2d-fleur",
     cat:   "2d",
-    title: "Halcyon Blades",
-    desc:  "A series of high-fantasy weapon designs, each with its own mythology and visual language.",
-    img:   "images/2d/2d-01.jpg",
+    title: "Fleur",
+    desc:  "Personal art.",
+    img:   "images/2d/fleur.png",
+    size:  "normal",
+    year:  "2026"
+  },
+  {
+    id:    "2d-concept",
+    cat:   "2d",
+    title: "Concept Art",
+    desc:  "Concept art for a personal project.",
+    img:   "images/2d/concept.png",
     size:  "wide",
-    year:  "2024"
+    year:  "2026"
   },
   {
-    id:    "2d-02",
+    id:    "2d-concept-character",
     cat:   "2d",
-    title: "Creature Study 741",
-    desc:  "Specimens from an unnamed reality. Ink and digital.",
-    img:   "images/2d/2d-02.jpg",
+    title: "Concept Character",
+    desc:  "Concept art for a personal project.",
+    img:   "images/2d/concept-character.png",
     size:  "tall",
-    year:  "2024"
+    year:  "2026"
   },
   {
-    id:    "2d-03",
+    id:    "2d-edgegooner2",
     cat:   "2d",
-    title: "Character Development",
-    desc:  "Loose sketches exploring adventurer archetypes for an unrealised fantasy project.",
-    img:   "images/2d/2d-03.jpg",
+    title: "Edgegooner Fanart",
+    desc:  "Fanart study.",
+    img:   "images/2d/edgegooner2.png",
     size:  "normal",
-    year:  "2023"
+    year:  "2025"
   },
   {
-    id:    "2d-04",
+    id:    "2d-hourglass",
     cat:   "2d",
-    title: "Robot Warm-ups",
-    desc:  "Morning sketch routine. Ten minutes each, no corrections.",
-    img:   "images/2d/2d-04.jpg",
+    title: "Hourglass",
+    desc:  "Fanart study.",
+    img:   "images/2d/hourglass.png",
+    size:  "tall",
+    year:  "2025"
+  },
+  {
+    id:    "2d-kiperina2",
+    cat:   "2d",
+    title: "Kiperina Fanart",
+    desc:  "Fanart study.",
+    img:   "images/2d/kiperina 2.png",
+    size:  "normal",
+    year:  "2025"
+  },
+  {
+    id:    "2d-miku2",
+    cat:   "2d",
+    title: "Miku Fanart",
+    desc:  "Fanart study.",
+    img:   "images/2d/miku2.png",
     size:  "square",
-    year:  "2023"
+    year:  "2025"
   },
   {
-    id:    "2d-05",
+    id:    "2d-pastry",
     cat:   "2d",
-    title: "Lullaby",
-    desc:  "A personal piece about quiet and memory.",
-    img:   "images/2d/2d-05.jpg",
+    title: "Pastry",
+    desc:  "Fanart study.",
+    img:   "images/2d/pastry.png",
     size:  "normal",
-    year:  "2023"
+    year:  "2025"
   },
   {
-    id:    "2d-06",
+    id:    "2d-silk",
     cat:   "2d",
-    title: "Dino Studies",
-    desc:  "Distinctly-coloured dinosaurs and their strange relationship with birds.",
-    img:   "images/2d/2d-06.jpg",
-    size:  "normal",
-    year:  "2022"
+    title: "Silk Fanart",
+    desc:  "Fanart study.",
+    img:   "images/2d/silk.png",
+    size:  "wide",
+    year:  "2025"
   },
 
   /* ── 3D ── */
   {
-    id:    "3d-01",
+    id:    "3d-mockup1",
     cat:   "3d",
-    title: "Portrait Sketches",
-    desc:  "Blender sculpts exploring expressive portraiture. Goal was comfort with digital clay, not polish.",
-    img:   "images/3d/3d-01.jpg",
+    title: "Design Mockup I",
+    desc:  "Design mockup for an academic project.",
+    img:   "images/3d/Mockup.png",
     size:  "wide",
-    year:  "2024"
+    year:  "2026"
   },
   {
-    id:    "3d-02",
+    id:    "3d-mockup2",
     cat:   "3d",
-    title: "Light Shapers",
-    desc:  "A study of light, shape, and shadow using procedural geometry.",
-    img:   "images/3d/3d-02.jpg",
-    size:  "tall",
-    year:  "2024"
-  },
-  {
-    id:    "3d-03",
-    cat:   "3d",
-    title: "Nuclear Landscape",
-    desc:  "Environmental render for the Nuclear Maw world — a post-collapse racing territory.",
-    img:   "images/3d/3d-03.jpg",
+    title: "Design Mockup II",
+    desc:  "Design mockup for an academic project.",
+    img:   "images/3d/mockup2.png",
     size:  "normal",
-    year:  "2023"
-  },
-  {
-    id:    "3d-04",
-    cat:   "3d",
-    title: "Creature Prop",
-    desc:  "3D proxy model built to support sculptors during production.",
-    img:   "images/3d/3d-04.jpg",
-    size:  "square",
-    year:  "2023"
-  },
-  {
-    id:    "3d-05",
-    cat:   "3d",
-    title: "Barrow Downs",
-    desc:  "Environmental study for an untitled Lord of the Rings game project.",
-    img:   "images/3d/3d-05.jpg",
-    size:  "normal",
-    year:  "2022"
+    year:  "2026"
   },
 
   /* ── DESIGN ── */
   {
-    id:    "design-01",
+    id:    "design-book-pdf",
     cat:   "design",
-    title: "Aegis of Champions",
-    desc:  "Design process and final product for a living tournament trophy — forged from bronze, silver, and leather.",
-    img:   "images/design/de-01.jpg",
+    title: "Type Specimen Booklet",
+    desc:  "Experimental typography booklet. A multi-page interactive catalog rendered dynamically from a PDF document. Press on the screen sides or swipe to turn pages.",
+    pdf:   "images/design/Househol_Specimen.pdf",
+    img:   "images/design/placeholder.svg",
     size:  "wide",
-    year:  "2024"
+    year:  "2026"
   },
   {
-    id:    "design-02",
+    id:    "design-book-images",
     cat:   "design",
-    title: "Item Icon System",
-    desc:  "In-game item icons built for immediate readability — colour, shape, and type as a visual language.",
-    img:   "images/design/de-02.jpg",
-    size:  "square",
-    year:  "2023"
+    title: "Manifesto Booklet",
+    desc:  "Academic project. An interactive 3D digital scrapbook compiled from separate design sheets. Press on the screen sides or swipe to turn pages.",
+    pages: [
+      "images/design/manifesto-cover.png",
+      "images/design/manifesto-00.png",
+      "images/design/manifesto-02.png",
+      "images/design/manifesto-h (1).png",
+      "images/design/manifesto-h (2).png",
+      "images/design/manifesto-h (3).png",
+      "images/design/manifesto-h (4).png"
+    ],
+    img:   "images/design/manifesto-cover.png",
+    size:  "normal",
+    year:  "2026"
   },
   {
-    id:    "design-03",
+    id:    "design-manifesto-animation",
     cat:   "design",
-    title: "Update Pages",
-    desc:  "Key art and header illustrations for game update pages, 2009–2015.",
-    img:   "images/design/de-03.jpg",
+    title: "Manifesto Animation",
+    desc:  "Academic project, animated manifesto design.",
+    img:   "images/design/ezgif.com-gif-maker.gif",
+    size:  "normal",
+    year:  "2026"
+  },
+  {
+    id:    "design-greenmap-main",
+    cat:   "design",
+    title: "Greenmap Poster",
+    desc:  "Academic project, main design layout.",
+    img:   "images/design/greenmap.png",
+    size:  "wide",
+    year:  "2026"
+  },
+  {
+    id:    "design-greenmap-animation",
+    cat:   "design",
+    title: "Greenmap Animation",
+    desc:  "Academic project, animated map concept.",
+    img:   "images/design/gif-greenmap.gif",
+    size:  "normal",
+    year:  "2026"
+  },
+  {
+    id:    "design-greenmap-details",
+    cat:   "design",
+    title: "Greenmap Details",
+    desc:  "Academic project, layout sheets detailing parts of the design.",
+    img:   "images/design/greenmap1.png",
     size:  "tall",
-    year:  "2023"
+    year:  "2026"
   },
   {
-    id:    "design-04",
+    id:    "design-greenmap-icon1",
     cat:   "design",
-    title: "Graphic T-Shirts",
-    desc:  "Graphic illustrations used for exclusive merchandise drops.",
-    img:   "images/design/de-04.jpg",
-    size:  "normal",
-    year:  "2022"
+    title: "Greenmap Iconography I",
+    desc:  "Academic project, custom icons designed for the project.",
+    img:   "images/design/greenmap-icon.png",
+    size:  "square",
+    year:  "2026"
   },
   {
-    id:    "design-05",
+    id:    "design-greenmap-icon2",
     cat:   "design",
-    title: "Brand System",
-    desc:  "A cohesive visual identity project including typography, colour, and mark.",
-    img:   "images/design/de-05.jpg",
-    size:  "normal",
-    year:  "2022"
+    title: "Greenmap Iconography II",
+    desc:  "Academic project, icon design variants.",
+    img:   "images/design/greenmap-icon2.png",
+    size:  "square",
+    year:  "2026"
   }
 
 ];
