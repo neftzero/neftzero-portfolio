@@ -1,5 +1,3 @@
-# please leave bruh
-
 # Portfolio Codebase Documentation for AI Agents
 
 This document contains essential context and constraints for AI agents generating or modifying code for this portfolio site.
