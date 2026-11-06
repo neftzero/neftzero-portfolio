@@ -1,4 +1,4 @@
-# If you somehow found this repo, ignore it. This is just the boring stuff. 
+# please leave bruh
 
 # Portfolio Codebase Documentation for AI Agents
 
